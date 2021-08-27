@@ -3,47 +3,54 @@
 #include <string.h>
 #include <new>
 
-typedef struct _POD
-{
-    int Field0;
-    int Field1;
-} POD;
 
-class AClass
-{
+class AClass {
 public:
- 
-    AClass() 
-    {
-        if (m_PodMember.Field0 == -1)
-        {
-            printf("observed\n");
+    AClass() {
+        if (Field0 == -1) {
+            printf("write observed\n");
         }
-        else
-        {
-            printf("not observed\n"); 
+        else {
+            printf("write not observed\n"); 
         }
-
     }
 
-public:
-        POD m_PodMember; 
+    void MemberFunction() {
+        if (Field0 == -1) {
+            printf("write observed\n");
+        }
+        else {
+            printf("write not observed\n"); 
+        }
+    }
+    int Field0; 
 };
 
-void undefined_behavior(int argc)
-{
-    AClass *aClass = static_cast<AClass*>(malloc(sizeof(*aClass)));
-    if (argc > 1)
-    {
-        aClass->m_PodMember.Field0 = -1;
+
+int undefined_behavior(int argc) {
+    AClass* aClass = static_cast<AClass*>(malloc(sizeof(*aClass)));
+    
+    memset(aClass, 0x0, sizeof(*aClass));
+
+    if (argc > 1) {
+        // write_object(aClass);
+        // printf("write should be observed after:\n");
+        aClass->Field0 = -1;
+        // memset(aClass, 0xFF, sizeof(*aClass));
     }
-    // printf("read before ctor: %d\n", aClass->m_PodMember.Field0);
-    new (aClass) AClass();
+
+    return (new (aClass) AClass())->Field0;
+    // aClass->MemberFunction();
+    // return aClass->Field0;
 }
 
-
-int main(int argc, char **argv)
-{
-    undefined_behavior(argc);
-    undefined_behavior(argc + 1);
+int main(int argc, char **argv) {
+    if (undefined_behavior(argc) == undefined_behavior(argc + 1))
+    {
+        printf("warning: undefined behavior observed for %s\n", COMPILER_DESC);
+    }
+    else
+    {
+        printf("undefined behavior not observed for %s\n", COMPILER_DESC);
+    }
 }
